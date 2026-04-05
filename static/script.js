@@ -49,6 +49,19 @@ async function setContext(contextName) {
 async function trainGesture() {
   setError('');
 
+  // 🔥 STEP 1: Capture gesture immediately
+  try {
+    const res = await fetch('/capture_landmarks');
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error);
+
+  } catch (err) {
+    setError("❌ No hand detected. Show gesture properly.");
+    return;
+  }
+
+  // 🔥 STEP 2: Now ask inputs
   const gestureName = prompt('Enter gesture name:');
   if (!gestureName || !gestureName.trim()) {
     setError("❌ Gesture name required");
@@ -67,8 +80,7 @@ async function trainGesture() {
   const bankMsg = prompt('Bank message:');
   if (bankMsg === null) return;
 
-  console.log("🔥 Sending request...");
-
+  // 🔥 STEP 3: Send training request
   try {
     const res = await fetch('/train', {
       method: 'POST',
@@ -86,17 +98,15 @@ async function trainGesture() {
 
     const data = await res.json();
 
-    console.log("🔥 Response:", data);
-
-    if (!res.ok) throw new Error(data.error || 'Training failed');
+    if (!res.ok) throw new Error(data.error);
 
     setError(`✅ Gesture trained: ${data.gesture_name}`);
 
   } catch (err) {
-    console.error(err);
     setError("❌ Training failed");
   }
 }
+
 
 trainBtn.addEventListener('click', trainGesture);
 

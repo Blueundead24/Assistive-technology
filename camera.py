@@ -12,8 +12,6 @@ from config import (
 from gestures import GestureStore, normalize_landmarks
 
 
-# 🔥 CHANGE THIS IF YOUR PHONE IP CHANGES
-PHONE_CAMERA_URL = "http://192.168.0.165:8080/video"
 
 
 class CameraProcessor:
@@ -32,8 +30,7 @@ class CameraProcessor:
         )
 
         # 🔥 Open phone stream with buffer control
-        self.cap = cv2.VideoCapture(PHONE_CAMERA_URL)
-        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        self.cap = cv2.VideoCapture(0)
 
         if not self.cap.isOpened():
             raise RuntimeError("❌ Unable to open phone camera stream")
@@ -63,9 +60,6 @@ class CameraProcessor:
 
             # 🔥 Resize (BIG performance gain)
             frame = cv2.resize(frame, (320, 240))
-
-            # 🔥 ORIENTATION FIX (choose ONE and stick to it)
-            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
             # 🔥 Mirror for selfie
             frame = cv2.flip(frame, 1)

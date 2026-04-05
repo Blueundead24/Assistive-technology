@@ -1,4 +1,5 @@
 import threading
+import time
 from typing import Dict
 
 from flask import Flask, Response, jsonify, render_template, request
@@ -7,6 +8,10 @@ from camera import CameraProcessor
 from config import CONTEXTS, DEFAULT_CONTEXT, SPEECH_COOLDOWN_SECONDS
 from gestures import GestureStore
 from tts import TTSManager
+
+# 🔥 Capture storage
+captured_landmarks = None
+capture_lock = threading.Lock()
 
 app = Flask(__name__)
 
@@ -34,6 +39,7 @@ gesture_context_map = {
         "bank": "Check balance"
     }
 }
+
 state_lock = threading.Lock()
 state: Dict[str, str] = {
     "context": DEFAULT_CONTEXT,
@@ -86,26 +92,30 @@ def video_feed():
     )
 
 
+# 🔥 FIXED TRAIN ROUTE (uses captured gesture)
 @app.route("/train", methods=["POST"])
 def train():
+    global captured_landmarks
+
     data = request.get_json(silent=True) or {}
 
     gesture_name = str(data.get("gesture_name", "")).strip().lower()
     messages = data.get("messages", {})
 
-    print("🔥 TRAIN REQUEST:", gesture_name, messages)  # DEBUG
-
     if not gesture_name:
         return jsonify({"error": "gesture_name is required"}), 400
 
-    landmarks = camera.get_latest_landmarks()
+    # ✅ Use captured gesture instead of live one
+    with capture_lock:
+        landmarks = None if captured_landmarks is None else captured_landmarks.copy()
+
     if landmarks is None:
-        return jsonify({"error": "No hand detected"}), 400
+        return jsonify({"error": "No captured gesture"}), 400
 
     # store gesture
     store.add_gesture(gesture_name, landmarks)
 
-    # store messages safely
+    # store messages
     gesture_context_map[gesture_name] = {
         "cafe": str(messages.get("cafe", "")).strip(),
         "hospital": str(messages.get("hospital", "")).strip(),
@@ -140,6 +150,27 @@ def set_context():
         state["context"] = context_name
 
     return jsonify({"context": context_name})
+
+
+# 🔥 FIXED CAPTURE ROUTE (WAIT + STABLE)
+@app.route("/capture_landmarks")
+def capture_landmarks():
+    global captured_landmarks
+
+    timeout = 2.0  # seconds
+    start_time = time.time()
+
+    while time.time() - start_time < timeout:
+        landmarks = camera.get_latest_landmarks()
+
+        if landmarks is not None:
+            with capture_lock:
+                captured_landmarks = landmarks.copy()
+            return jsonify({"message": "Gesture captured"})
+
+        time.sleep(0.05)
+
+    return jsonify({"error": "No hand detected"}), 400
 
 
 def start_background_threads():
