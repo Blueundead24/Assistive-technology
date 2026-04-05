@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GestureTalk – Speak with a Wave</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <main class="container">
+    <section class="panel">
+      <h1>GestureTalk – Speak with a Wave</h1>
+      <p class="subtitle">Train custom gestures, switch context, and speak offline in real time.</p>
+
+      <div class="video-wrap">
+        <img id="videoFeed" src="{{ url_for('video_feed') }}" alt="Live camera feed" />
+      </div>
+
+      <div class="controls">
+        <button id="trainBtn" class="btn-train">Train Current Gesture</button>
+      </div>
+
+      <div class="contexts" id="contextButtons">
+        {% for ctx in contexts %}
+        <button class="btn-context" data-context="{{ ctx }}">{{ ctx|capitalize }}</button>
+        {% endfor %}
+      </div>
+
+      <p id="errorBox" class="error"></p>
+    </section>
+
+    <aside class="panel">
+      <h2>Live Status</h2>
+      <div class="card">
+        <div class="label">Current Context</div>
+        <div class="value" id="contextValue">-</div>
+      </div>
+      <div class="card">
+        <div class="label">Detected Gesture</div>
+        <div class="value" id="gestureValue">-</div>
+      </div>
+      <div class="card">
+        <div class="label">Spoken Phrase</div>
+        <div class="value" id="phraseValue">-</div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ✅ IMPORTANT FIX: add defer -->
+  <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</body>
+</html>
