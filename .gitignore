@@ -10,3 +10,4 @@ __pycache__/
 *.pyd 
 *.dll 
 .env 
+gestures.json 
