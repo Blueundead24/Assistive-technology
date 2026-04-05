@@ -123,3 +123,8 @@ git push -u origin main --force
 * Multi-language speech support
 * Pre-trained gesture dataset
 * Cloud deployment
+
+### 🆕 Recent Updates
+- Added stable gesture capture before training
+- Fixed unreliable live training issue
+- Improved camera handling (webcam support)
